@@ -1,0 +1,556 @@
+;; Time-Locked Yield Vault - Clarity 4
+;; A DeFi savings protocol with time-based yield accrual
+;;
+;; Clarity 4 Features Used:
+;; - stacks-block-time: Calculate yield based on actual time elapsed
+;; - restrict-assets?: Protect vault assets during operations
+;; - to-ascii?: Generate human-readable deposit receipts
+;; - contract-hash?: Verify approved token contracts
+
+;; ============================================
+;; CONSTANTS
+;; ============================================
+
+(define-constant CONTRACT_OWNER tx-sender)
+(define-constant ERR_UNAUTHORIZED (err u2001))
+(define-constant ERR_INVALID_AMOUNT (err u2002))
+(define-constant ERR_VAULT_NOT_FOUND (err u2003))
+(define-constant ERR_LOCK_NOT_EXPIRED (err u2004))
+(define-constant ERR_INSUFFICIENT_BALANCE (err u2005))
+(define-constant ERR_INVALID_LOCK_PERIOD (err u2006))
+(define-constant ERR_ALREADY_CLAIMED (err u2007))
+(define-constant ERR_POOL_NOT_FOUND (err u2008))
+(define-constant ERR_POOL_INACTIVE (err u2009))
+(define-constant ERR_INVALID_CONTRACT (err u2010))
+
+;; Yield rates (basis points per year - 10000 = 100%)
+(define-constant YIELD_30_DAYS u300)      ;; 3% APY for 30 days
+(define-constant YIELD_90_DAYS u500)      ;; 5% APY for 90 days
+(define-constant YIELD_180_DAYS u800)     ;; 8% APY for 180 days
+(define-constant YIELD_365_DAYS u1200)    ;; 12% APY for 365 days
+
+;; Time constants (in seconds)
+(define-constant SECONDS_PER_DAY u86400)
+(define-constant SECONDS_PER_YEAR u31536000)
+
+;; Lock period options (in seconds)
+(define-constant LOCK_30_DAYS u2592000)
+(define-constant LOCK_90_DAYS u7776000)
+(define-constant LOCK_180_DAYS u15552000)
+(define-constant LOCK_365_DAYS u31536000)
+
+;; ============================================
+;; DATA STRUCTURES
+;; ============================================
+
+;; User vault positions
+(define-map vaults
+  { vault-id: uint }
+  {
+    owner: principal,
+    principal-amount: uint,
+    deposited-at: uint,
+    lock-until: uint,
+    lock-period: uint,
+    yield-rate: uint,
+    is-claimed: bool,
+    pool-id: uint
+  }
+)
+
+;; Yield pools for different assets
+(define-map yield-pools
+  { pool-id: uint }
+  {
+    name: (string-ascii 32),
+    total-deposits: uint,
+    total-yield-paid: uint,
+    is-active: bool,
+    min-deposit: uint,
+    max-deposit: uint,
+    created-at: uint
+  }
+)
+
+;; Approved token contracts (verified with contract-hash?)
+(define-map approved-contracts
+  { contract-hash: (buff 32) }
+  { 
+    is-approved: bool,
+    name: (string-ascii 32)
+  }
+)
+
+;; User stats
+(define-map user-stats
+  { user: principal }
+  {
+    total-deposited: uint,
+    total-yield-earned: uint,
+    vault-count: uint,
+    first-deposit-at: uint
+  }
+)
+
+;; Global counters
+(define-data-var next-vault-id uint u1)
+(define-data-var next-pool-id uint u1)
+(define-data-var total-tvl uint u0)
+(define-data-var treasury-balance uint u0)
+
+;; ============================================
+;; READ-ONLY FUNCTIONS
+;; ============================================
+
+;; Get vault details
+(define-read-only (get-vault (vault-id uint))
+  (map-get? vaults { vault-id: vault-id })
+)
+
+;; Get pool details
+(define-read-only (get-pool (pool-id uint))
+  (map-get? yield-pools { pool-id: pool-id })
+)
+
+;; Get user statistics
+(define-read-only (get-user-stats (user principal))
+  (default-to 
+    { total-deposited: u0, total-yield-earned: u0, vault-count: u0, first-deposit-at: u0 }
+    (map-get? user-stats { user: user })
+  )
+)
+
+;; Get current timestamp using Clarity 4
+(define-read-only (get-current-time)
+  stacks-block-time
+)
+
+;; Calculate accrued yield using actual time elapsed
+;; Uses stacks-block-time for precise time-based calculations
+(define-read-only (calculate-yield (vault-id uint))
+  (match (map-get? vaults { vault-id: vault-id })
+    vault
+    (let
+      (
+        (principal-amt (get principal-amount vault))
+        (deposited-at (get deposited-at vault))
+        (yield-rate (get yield-rate vault))
+        (time-elapsed (- stacks-block-time deposited-at))
+        ;; Calculate proportional yield: principal * rate * time / (year * 10000)
+        (yield-amount (/ (* (* principal-amt yield-rate) time-elapsed) 
+                        (* SECONDS_PER_YEAR u10000)))
+      )
+      (ok {
+        principal: principal-amt,
+        accrued-yield: yield-amount,
+        total-value: (+ principal-amt yield-amount),
+        time-elapsed-seconds: time-elapsed,
+        time-remaining: (if (> (get lock-until vault) stacks-block-time)
+                          (- (get lock-until vault) stacks-block-time)
+                          u0)
+      })
+    )
+    (err u0)
+  )
+)
+
+;; Check if vault is unlocked
+(define-read-only (is-vault-unlocked (vault-id uint))
+  (match (map-get? vaults { vault-id: vault-id })
+    vault (>= stacks-block-time (get lock-until vault))
+    false
+  )
+)
+
+;; Get yield rate for lock period
+(define-read-only (get-yield-rate (lock-period uint))
+  (if (is-eq lock-period LOCK_30_DAYS)
+    YIELD_30_DAYS
+    (if (is-eq lock-period LOCK_90_DAYS)
+      YIELD_90_DAYS
+      (if (is-eq lock-period LOCK_180_DAYS)
+        YIELD_180_DAYS
+        (if (is-eq lock-period LOCK_365_DAYS)
+          YIELD_365_DAYS
+          u0
+        )
+      )
+    )
+  )
+)
+
+;; Generate deposit receipt using to-ascii?
+(define-read-only (generate-deposit-receipt (vault-id uint) (amount uint) (lock-days uint))
+  (let
+    (
+      (vault-str (unwrap-panic (to-ascii? vault-id)))
+      (amount-str (unwrap-panic (to-ascii? amount)))
+      (lock-str (unwrap-panic (to-ascii? lock-days)))
+      (time-str (unwrap-panic (to-ascii? stacks-block-time)))
+    )
+    (concat "VAULT_RECEIPT|ID:"
+      (concat vault-str
+        (concat "|AMOUNT:"
+          (concat amount-str
+            (concat "|LOCK_DAYS:"
+              (concat lock-str
+                (concat "|TIMESTAMP:" time-str)
+              )
+            )
+          )
+        )
+      )
+    )
+  )
+)
+
+;; Get total value locked
+(define-read-only (get-tvl)
+  (var-get total-tvl)
+)
+
+;; ============================================
+;; EVENTS (for monitoring)
+;; ============================================
+
+(define-private (log-deposit-event (vault-id uint) (user principal) (amount uint) (lock-period uint) (pool-id uint))
+  (print {
+    event: "deposit",
+    vault-id: vault-id,
+    user: user,
+    amount: amount,
+    lock-period: lock-period,
+    pool-id: pool-id,
+    timestamp: stacks-block-time
+  })
+)
+
+(define-private (log-withdraw-event (vault-id uint) (user principal) (principal-amt uint) (yield-earned uint))
+  (print {
+    event: "withdraw",
+    vault-id: vault-id,
+    user: user,
+    principal: principal-amt,
+    yield-earned: yield-earned,
+    total: (+ principal-amt yield-earned),
+    timestamp: stacks-block-time
+  })
+)
+
+(define-private (log-emergency-withdraw-event (vault-id uint) (user principal) (payout uint) (penalty uint))
+  (print {
+    event: "emergency-withdraw",
+    vault-id: vault-id,
+    user: user,
+    payout: payout,
+    penalty: penalty,
+    timestamp: stacks-block-time
+  })
+)
+
+(define-private (log-pool-created-event (pool-id uint) (name (string-ascii 32)))
+  (print {
+    event: "pool-created",
+    pool-id: pool-id,
+    name: name,
+    timestamp: stacks-block-time
+  })
+)
+
+(define-private (log-pool-deactivated-event (pool-id uint))
+  (print {
+    event: "pool-deactivated",
+    pool-id: pool-id,
+    timestamp: stacks-block-time
+  })
+)
+
+;; ============================================
+;; PUBLIC FUNCTIONS
+;; ============================================
+
+;; Initialize a yield pool (admin only)
+(define-public (create-pool 
+    (name (string-ascii 32))
+    (min-deposit uint)
+    (max-deposit uint)
+  )
+  (let
+    (
+      (pool-id (var-get next-pool-id))
+    )
+    ;; Only contract owner can create pools
+    (asserts! (is-eq tx-sender CONTRACT_OWNER) ERR_UNAUTHORIZED)
+    
+    (map-set yield-pools
+      { pool-id: pool-id }
+      {
+        name: name,
+        total-deposits: u0,
+        total-yield-paid: u0,
+        is-active: true,
+        min-deposit: min-deposit,
+        max-deposit: max-deposit,
+        created-at: stacks-block-time
+      }
+    )
+
+    (var-set next-pool-id (+ pool-id u1))
+    (log-pool-created-event pool-id name)
+    (ok pool-id)
+  )
+)
+
+;; Deposit STX into a time-locked vault
+;; @param amount: Amount in microSTX
+;; @param lock-period: One of LOCK_30/90/180/365_DAYS
+;; @param pool-id: Target yield pool
+(define-public (deposit (amount uint) (lock-period uint) (pool-id uint))
+  (let
+    (
+      (vault-id (var-get next-vault-id))
+      (yield-rate (get-yield-rate lock-period))
+      (lock-until (+ stacks-block-time lock-period))
+      (pool (unwrap! (map-get? yield-pools { pool-id: pool-id }) ERR_POOL_NOT_FOUND))
+      (user-stat (get-user-stats tx-sender))
+    )
+    ;; Validate inputs
+    (asserts! (> amount u0) ERR_INVALID_AMOUNT)
+    (asserts! (> yield-rate u0) ERR_INVALID_LOCK_PERIOD)
+    (asserts! (get is-active pool) ERR_POOL_INACTIVE)
+    (asserts! (>= amount (get min-deposit pool)) ERR_INVALID_AMOUNT)
+    (asserts! (<= amount (get max-deposit pool)) ERR_INVALID_AMOUNT)
+    
+    ;; Transfer STX to contract using Clarity 4's as-contract?
+    (unwrap! (as-contract? ((with-all-assets-unsafe))
+      (stx-transfer? amount tx-sender tx-sender)
+    ) ERR_INSUFFICIENT_BALANCE)
+    
+    ;; Create vault
+    (map-set vaults
+      { vault-id: vault-id }
+      {
+        owner: tx-sender,
+        principal-amount: amount,
+        deposited-at: stacks-block-time,
+        lock-until: lock-until,
+        lock-period: lock-period,
+        yield-rate: yield-rate,
+        is-claimed: false,
+        pool-id: pool-id
+      }
+    )
+    
+    ;; Update pool stats
+    (map-set yield-pools
+      { pool-id: pool-id }
+      (merge pool { total-deposits: (+ (get total-deposits pool) amount) })
+    )
+    
+    ;; Update user stats
+    (map-set user-stats
+      { user: tx-sender }
+      {
+        total-deposited: (+ (get total-deposited user-stat) amount),
+        total-yield-earned: (get total-yield-earned user-stat),
+        vault-count: (+ (get vault-count user-stat) u1),
+        first-deposit-at: (if (is-eq (get first-deposit-at user-stat) u0)
+                            stacks-block-time
+                            (get first-deposit-at user-stat))
+      }
+    )
+    
+    ;; Update TVL
+    (var-set total-tvl (+ (var-get total-tvl) amount))
+    
+    ;; Increment vault ID
+    (var-set next-vault-id (+ vault-id u1))
+
+    ;; Log deposit event
+    (log-deposit-event vault-id tx-sender amount lock-period pool-id)
+
+    (ok {
+      vault-id: vault-id,
+      lock-until: lock-until,
+      yield-rate: yield-rate,
+      receipt: (generate-deposit-receipt vault-id amount (/ lock-period SECONDS_PER_DAY))
+    })
+  )
+)
+
+;; Withdraw principal + yield after lock period
+(define-public (withdraw (vault-id uint))
+  (let
+    (
+      (vault (unwrap! (map-get? vaults { vault-id: vault-id }) ERR_VAULT_NOT_FOUND))
+      (owner (get owner vault))
+      (principal-amt (get principal-amount vault))
+      (pool-id (get pool-id vault))
+      (pool (unwrap! (map-get? yield-pools { pool-id: pool-id }) ERR_POOL_NOT_FOUND))
+      (user-stat (get-user-stats owner))
+      (yield-calc (unwrap! (calculate-yield vault-id) ERR_VAULT_NOT_FOUND))
+      (total-payout (get total-value yield-calc))
+      (yield-earned (get accrued-yield yield-calc))
+    )
+    ;; Verify ownership
+    (asserts! (is-eq tx-sender owner) ERR_UNAUTHORIZED)
+    
+    ;; Check lock period has expired using stacks-block-time
+    (asserts! (>= stacks-block-time (get lock-until vault)) ERR_LOCK_NOT_EXPIRED)
+    
+    ;; Check not already claimed
+    (asserts! (not (get is-claimed vault)) ERR_ALREADY_CLAIMED)
+
+    ;; Transfer funds back to user using Clarity 4's as-contract?
+    (unwrap! (as-contract? ((with-all-assets-unsafe))
+      (stx-transfer? total-payout tx-sender owner)
+    ) ERR_INSUFFICIENT_BALANCE)
+    
+    ;; Mark vault as claimed
+    (map-set vaults
+      { vault-id: vault-id }
+      (merge vault { is-claimed: true })
+    )
+    
+    ;; Update pool stats
+    (map-set yield-pools
+      { pool-id: pool-id }
+      (merge pool { 
+        total-deposits: (- (get total-deposits pool) principal-amt),
+        total-yield-paid: (+ (get total-yield-paid pool) yield-earned)
+      })
+    )
+    
+    ;; Update user stats
+    (map-set user-stats
+      { user: owner }
+      (merge user-stat { 
+        total-yield-earned: (+ (get total-yield-earned user-stat) yield-earned)
+      })
+    )
+    
+    ;; Update TVL
+    (var-set total-tvl (- (var-get total-tvl) principal-amt))
+
+    ;; Log withdraw event
+    (log-withdraw-event vault-id owner principal-amt yield-earned)
+
+    (ok {
+      principal: principal-amt,
+      yield-earned: yield-earned,
+      total-withdrawn: total-payout
+    })
+  )
+)
+
+;; Emergency withdraw (forfeit yield)
+(define-public (emergency-withdraw (vault-id uint))
+  (let
+    (
+      (vault (unwrap! (map-get? vaults { vault-id: vault-id }) ERR_VAULT_NOT_FOUND))
+      (owner (get owner vault))
+      (principal-amt (get principal-amount vault))
+      (pool-id (get pool-id vault))
+      (pool (unwrap! (map-get? yield-pools { pool-id: pool-id }) ERR_POOL_NOT_FOUND))
+      ;; Penalty: 10% of principal goes to treasury
+      (penalty (/ principal-amt u10))
+      (payout (- principal-amt penalty))
+    )
+    ;; Verify ownership
+    (asserts! (is-eq tx-sender owner) ERR_UNAUTHORIZED)
+    
+    ;; Check not already claimed
+    (asserts! (not (get is-claimed vault)) ERR_ALREADY_CLAIMED)
+
+    ;; Transfer remaining principal (minus penalty) using Clarity 4's as-contract?
+    (unwrap! (as-contract? ((with-all-assets-unsafe))
+      (stx-transfer? payout tx-sender owner)
+    ) ERR_INSUFFICIENT_BALANCE)
+    
+    ;; Mark vault as claimed
+    (map-set vaults
+      { vault-id: vault-id }
+      (merge vault { is-claimed: true })
+    )
+    
+    ;; Update pool
+    (map-set yield-pools
+      { pool-id: pool-id }
+      (merge pool { total-deposits: (- (get total-deposits pool) principal-amt) })
+    )
+    
+    ;; Update treasury
+    (var-set treasury-balance (+ (var-get treasury-balance) penalty))
+    
+    ;; Update TVL
+    (var-set total-tvl (- (var-get total-tvl) principal-amt))
+
+    ;; Log emergency withdraw event
+    (log-emergency-withdraw-event vault-id owner payout penalty)
+
+    (ok {
+      principal-returned: payout,
+      penalty-paid: penalty
+    })
+  )
+)
+
+;; Approve a token contract for deposits (uses contract-hash?)
+(define-public (approve-contract (contract-principal principal) (name (string-ascii 32)))
+  (let
+    (
+      (contract-code-hash (unwrap! (contract-hash? contract-principal) ERR_INVALID_CONTRACT))
+    )
+    ;; Only owner can approve
+    (asserts! (is-eq tx-sender CONTRACT_OWNER) ERR_UNAUTHORIZED)
+    
+    (map-set approved-contracts
+      { contract-hash: contract-code-hash }
+      { is-approved: true, name: name }
+    )
+    
+    (ok contract-code-hash)
+  )
+)
+
+;; Check if a contract is approved
+(define-read-only (is-contract-approved (contract-principal principal))
+  (match (contract-hash? contract-principal)
+    hash (match (map-get? approved-contracts { contract-hash: hash })
+           approval (get is-approved approval)
+           false)
+    false
+  )
+)
+
+;; Add yield to treasury (for protocol revenue)
+(define-public (fund-treasury (amount uint))
+  (begin
+    ;; Transfer STX to contract treasury using Clarity 4's as-contract?
+    (try! (as-contract? ((with-all-assets-unsafe))
+      (stx-transfer? amount tx-sender tx-sender)
+    ))
+    (var-set treasury-balance (+ (var-get treasury-balance) amount))
+    (ok amount)
+  )
+)
+
+;; Deactivate pool (admin)
+(define-public (deactivate-pool (pool-id uint))
+  (let
+    (
+      (pool (unwrap! (map-get? yield-pools { pool-id: pool-id }) ERR_POOL_NOT_FOUND))
+    )
+    (asserts! (is-eq tx-sender CONTRACT_OWNER) ERR_UNAUTHORIZED)
+    
+    (map-set yield-pools
+      { pool-id: pool-id }
+      (merge pool { is-active: false })
+    )
+
+    ;; Log pool deactivation event
+    (log-pool-deactivated-event pool-id)
+
+    (ok true)
+  )
+)

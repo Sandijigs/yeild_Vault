@@ -1,0 +1,52 @@
+# Clarinet cache and build artifacts
+.cache/
+history.txt
+costs-reports.json
+
+# Wallet files - NEVER COMMIT THESE!
+*wallet*.json
+*keychain*.json
+*.wallet
+settings/Testnet.toml
+settings/Mainnet.toml
+deployments/*.yaml
+deployments/*.plan.yaml
+!deployments/.gitkeep
+
+# Node modules (if using JS/TS tests)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Deployment artifacts
+deployments/*.json
+!deployments/.gitkeep
+
+# Temporary files
+tmp/
+temp/
+*.tmp
