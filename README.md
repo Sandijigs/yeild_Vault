@@ -1,6 +1,12 @@
 # 💰 Time-Locked Yield Vault
 
-A DeFi savings protocol with real-time yield accrual built with **Clarity 4** on Stacks.
+A DeFi savings protocol with real-time yield accrual built with **Clarity 4** (Epoch 3.3) on Stacks.
+
+## 📋 Requirements
+
+- **Clarinet 3.11.0+** (Clarinet 4 compatible)
+- **Clarity Version 4** with **Epoch 3.3**
+- Deno (for running tests)
 
 ## 🎯 Clarity 4 Features Used
 
@@ -45,10 +51,25 @@ A DeFi savings protocol with real-time yield accrual built with **Clarity 4** on
 
 ## 🚀 Quick Start
 
+### Setup
+
 ```bash
-cd 02-yield-vault
+# Clone and navigate to project
+cd yield-vault
+
+# Verify Clarity 4 configuration
+cat Clarinet.toml | grep -A2 "\[contracts"
+# Should show:
+#   clarity_version = 4
+#   epoch = 3.3
+
+# Check contract syntax
 clarinet check
-clarinet test
+
+# Run comprehensive test suite (requires Deno)
+deno test --allow-all tests/yield-vault_test.ts
+
+# Launch interactive console
 clarinet console
 ```
 
@@ -115,13 +136,35 @@ clarinet console
 - Nonce tracking for replay protection
 - Owner-only admin functions
 
+## 🧪 Testing
+
+The project includes **22 comprehensive tests** covering:
+
+- ✅ Pool creation and management
+- ✅ Deposit validation (min/max amounts, lock periods)
+- ✅ Yield calculations with time-based accrual
+- ✅ Withdrawal logic (normal and emergency)
+- ✅ Double-withdrawal prevention
+- ✅ Authorization and access control
+- ✅ User statistics tracking
+- ✅ TVL (Total Value Locked) updates
+- ✅ Contract approval system
+- ✅ Treasury funding
+- ✅ Clarity 4 feature usage (`stacks-block-time`, `to-ascii?`, `contract-hash?`)
+
+Run tests:
+```bash
+deno test --allow-all tests/yield-vault_test.ts
+```
+
 ## 🏆 Builder Challenge Points
 
-- ✅ `stacks-block-time` for yield calculations
-- ✅ `contract-hash?` for contract verification
-- ✅ `to-ascii?` for receipt generation
-- ✅ Complete test suite
-- ✅ Production-ready DeFi protocol
+- ✅ **Clarity Version 4** with **Epoch 3.3** configured
+- ✅ `stacks-block-time` for real-time yield calculations
+- ✅ `contract-hash?` for token contract verification
+- ✅ `to-ascii?` for human-readable receipt generation
+- ✅ Comprehensive 22-test suite
+- ✅ Production-ready DeFi protocol with security features
 
 ## 📜 License
 

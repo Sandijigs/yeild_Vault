@@ -249,15 +249,17 @@
     )
 
     (var-set next-pool-id (+ pool-id u1))
-    (ok (begin
-      (print {
-        event: "pool-created",
-        pool-id: pool-id,
-        name: name,
-        timestamp: stacks-block-time
-      })
-      pool-id
-    ))
+    (let
+      (
+        (log-result (print {
+          event: "pool-created",
+          pool-id: pool-id,
+          name: name,
+          timestamp: stacks-block-time
+        }))
+      )
+      (ok pool-id)
+    )
   )
 )
 
@@ -326,24 +328,25 @@
     ;; Increment vault ID
     (var-set next-vault-id (+ vault-id u1))
 
-    (ok (begin
-      ;; Log deposit event for monitoring
-      (print {
-        event: "deposit",
-        vault-id: vault-id,
-        user: tx-sender,
-        amount: amount,
-        lock-period: lock-period,
-        pool-id: pool-id,
-        timestamp: stacks-block-time
-      })
-      {
+    (let
+      (
+        (log-result (print {
+          event: "deposit",
+          vault-id: vault-id,
+          user: tx-sender,
+          amount: amount,
+          lock-period: lock-period,
+          pool-id: pool-id,
+          timestamp: stacks-block-time
+        }))
+      )
+      (ok {
         vault-id: vault-id,
         lock-until: lock-until,
         yield-rate: yield-rate,
         receipt: (generate-deposit-receipt vault-id amount (/ lock-period SECONDS_PER_DAY))
-      }
-    ))
+      })
+    )
   )
 )
 
@@ -401,23 +404,24 @@
     ;; Update TVL
     (var-set total-tvl (- (var-get total-tvl) principal-amt))
 
-    (ok (begin
-      ;; Log withdraw event for monitoring
-      (print {
-        event: "withdraw",
-        vault-id: vault-id,
-        user: owner,
-        principal: principal-amt,
-        yield-earned: yield-earned,
-        total: (+ principal-amt yield-earned),
-        timestamp: stacks-block-time
-      })
-      {
+    (let
+      (
+        (log-result (print {
+          event: "withdraw",
+          vault-id: vault-id,
+          user: owner,
+          principal: principal-amt,
+          yield-earned: yield-earned,
+          total: (+ principal-amt yield-earned),
+          timestamp: stacks-block-time
+        }))
+      )
+      (ok {
         principal: principal-amt,
         yield-earned: yield-earned,
         total-withdrawn: total-payout
-      }
-    ))
+      })
+    )
   )
 )
 
@@ -463,21 +467,22 @@
     ;; Update TVL
     (var-set total-tvl (- (var-get total-tvl) principal-amt))
 
-    (ok (begin
-      ;; Log emergency withdraw event for monitoring
-      (print {
-        event: "emergency-withdraw",
-        vault-id: vault-id,
-        user: owner,
-        payout: payout,
-        penalty: penalty,
-        timestamp: stacks-block-time
-      })
-      {
+    (let
+      (
+        (log-result (print {
+          event: "emergency-withdraw",
+          vault-id: vault-id,
+          user: owner,
+          payout: payout,
+          penalty: penalty,
+          timestamp: stacks-block-time
+        }))
+      )
+      (ok {
         principal-returned: payout,
         penalty-paid: penalty
-      }
-    ))
+      })
+    )
   )
 )
 
@@ -534,14 +539,15 @@
       (merge pool { is-active: false })
     )
 
-    (ok (begin
-      ;; Log pool deactivation event for monitoring
-      (print {
-        event: "pool-deactivated",
-        pool-id: pool-id,
-        timestamp: stacks-block-time
-      })
-      true
-    ))
+    (let
+      (
+        (log-result (print {
+          event: "pool-deactivated",
+          pool-id: pool-id,
+          timestamp: stacks-block-time
+        }))
+      )
+      (ok true)
+    )
   )
 )

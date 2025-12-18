@@ -1,7 +1,10 @@
 # Clarinet cache and build artifacts
 .cache/
+.clarinet/
 history.txt
 costs-reports.json
+*.db
+*.sqlite
 
 # Wallet files - NEVER COMMIT THESE!
 *wallet*.json
@@ -17,6 +20,9 @@ deployments/*.plan.yaml
 node_modules/
 package-lock.json
 yarn.lock
+
+# Deno (for Clarinet testing)
+deno.lock
 
 # Environment variables
 .env
