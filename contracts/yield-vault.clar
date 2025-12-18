@@ -249,17 +249,7 @@
     )
 
     (var-set next-pool-id (+ pool-id u1))
-    (let
-      (
-        (log-result (print {
-          event: "pool-created",
-          pool-id: pool-id,
-          name: name,
-          timestamp: stacks-block-time
-        }))
-      )
-      (ok pool-id)
-    )
+    (ok pool-id)
   )
 )
 
@@ -284,8 +274,11 @@
     (asserts! (<= amount (get max-deposit pool)) ERR_INVALID_AMOUNT)
     
     ;; Transfer STX to contract using Clarity 4's as-contract?
-    (try! (as-contract? ((with-all-assets-unsafe))
-      (stx-transfer? amount tx-sender tx-sender)
+    (try! (as-contract? ((with-stx amount))
+      (begin
+        (unwrap-panic (stx-transfer? amount tx-sender tx-sender))
+        true
+      )
     ))
     
     ;; Create vault
@@ -328,25 +321,12 @@
     ;; Increment vault ID
     (var-set next-vault-id (+ vault-id u1))
 
-    (let
-      (
-        (log-result (print {
-          event: "deposit",
-          vault-id: vault-id,
-          user: tx-sender,
-          amount: amount,
-          lock-period: lock-period,
-          pool-id: pool-id,
-          timestamp: stacks-block-time
-        }))
-      )
-      (ok {
-        vault-id: vault-id,
-        lock-until: lock-until,
-        yield-rate: yield-rate,
-        receipt: (generate-deposit-receipt vault-id amount (/ lock-period SECONDS_PER_DAY))
-      })
-    )
+    (ok {
+      vault-id: vault-id,
+      lock-until: lock-until,
+      yield-rate: yield-rate,
+      receipt: (generate-deposit-receipt vault-id amount (/ lock-period SECONDS_PER_DAY))
+    })
   )
 )
 
@@ -374,8 +354,11 @@
     (asserts! (not (get is-claimed vault)) ERR_ALREADY_CLAIMED)
 
     ;; Transfer funds back to user using Clarity 4's as-contract?
-    (try! (as-contract? ((with-all-assets-unsafe))
-      (stx-transfer? total-payout tx-sender owner)
+    (try! (as-contract? ((with-stx total-payout))
+      (begin
+        (unwrap-panic (stx-transfer? total-payout tx-sender owner))
+        true
+      )
     ))
     
     ;; Mark vault as claimed
@@ -404,24 +387,11 @@
     ;; Update TVL
     (var-set total-tvl (- (var-get total-tvl) principal-amt))
 
-    (let
-      (
-        (log-result (print {
-          event: "withdraw",
-          vault-id: vault-id,
-          user: owner,
-          principal: principal-amt,
-          yield-earned: yield-earned,
-          total: (+ principal-amt yield-earned),
-          timestamp: stacks-block-time
-        }))
-      )
-      (ok {
-        principal: principal-amt,
-        yield-earned: yield-earned,
-        total-withdrawn: total-payout
-      })
-    )
+    (ok {
+      principal: principal-amt,
+      yield-earned: yield-earned,
+      total-withdrawn: total-payout
+    })
   )
 )
 
@@ -445,8 +415,11 @@
     (asserts! (not (get is-claimed vault)) ERR_ALREADY_CLAIMED)
 
     ;; Transfer remaining principal (minus penalty) using Clarity 4's as-contract?
-    (try! (as-contract? ((with-all-assets-unsafe))
-      (stx-transfer? payout tx-sender owner)
+    (try! (as-contract? ((with-stx payout))
+      (begin
+        (unwrap-panic (stx-transfer? payout tx-sender owner))
+        true
+      )
     ))
     
     ;; Mark vault as claimed
@@ -467,22 +440,10 @@
     ;; Update TVL
     (var-set total-tvl (- (var-get total-tvl) principal-amt))
 
-    (let
-      (
-        (log-result (print {
-          event: "emergency-withdraw",
-          vault-id: vault-id,
-          user: owner,
-          payout: payout,
-          penalty: penalty,
-          timestamp: stacks-block-time
-        }))
-      )
-      (ok {
-        principal-returned: payout,
-        penalty-paid: penalty
-      })
-    )
+    (ok {
+      principal-returned: payout,
+      penalty-paid: penalty
+    })
   )
 )
 
@@ -507,10 +468,12 @@
 ;; Check if a contract is approved
 (define-read-only (is-contract-approved (contract-principal principal))
   (match (contract-hash? contract-principal)
-    hash (match (map-get? approved-contracts { contract-hash: hash })
-           approval (get is-approved approval)
-           false)
-    false
+    hash
+    (match (map-get? approved-contracts { contract-hash: hash })
+      approval (get is-approved approval)
+      false
+    )
+    err false
   )
 )
 
@@ -518,8 +481,11 @@
 (define-public (fund-treasury (amount uint))
   (begin
     ;; Transfer STX to contract treasury using Clarity 4's as-contract?
-    (try! (as-contract? ((with-all-assets-unsafe))
-      (stx-transfer? amount tx-sender tx-sender)
+    (try! (as-contract? ((with-stx amount))
+      (begin
+        (unwrap-panic (stx-transfer? amount tx-sender tx-sender))
+        true
+      )
     ))
     (var-set treasury-balance (+ (var-get treasury-balance) amount))
     (ok amount)
@@ -539,15 +505,6 @@
       (merge pool { is-active: false })
     )
 
-    (let
-      (
-        (log-result (print {
-          event: "pool-deactivated",
-          pool-id: pool-id,
-          timestamp: stacks-block-time
-        }))
-      )
-      (ok true)
-    )
+    (ok true)
   )
 )

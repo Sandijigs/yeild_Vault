@@ -2,18 +2,21 @@
 name = "simnet"
 
 [accounts.deployer]
-mnemonic = "twice particular affair smile push picture miss apart office twelve lock wrong"
-balance = 10_000_000_000_000
+mnemonic = "point approve language letter cargo rough similar wrap focus edge polar task olympic tobacco blanket oxygen bubble elevator save usage hundred engage ramp key"
+balance = 100_000_000_000_000
 
 [accounts.wallet_1]
-mnemonic = "sell invite acquire kitten bamboo drastic jelly vivid peace spawn twice guilt"
-balance = 10_000_000_000_000
+mnemonic = "female adjust grain sound crew fleet smooth kayak margin crumble badge annoy rapid payment alpha spoon space program roof coach nominee hockey semi million"
+balance = 100_000_000_000_000
 
 [accounts.wallet_2]
-mnemonic = "hold excess usual excess ring elephant install account animal draft profit dose"
-balance = 10_000_000_000_000
+mnemonic = "afford alter spike hope short choose bus manage grain twist trim just wool proud foot doctor fix engage journey kidney obvious mercy curious circle"
+balance = 100_000_000_000_000
 
 [accounts.wallet_3]
-mnemonic = "cycle puppy glare enroll cost improve round trend wrist mushroom scorpion tower"
-balance = 10_000_000_000_000
+mnemonic = "glow load web exit horror kiss liar page recycle zone mesh spoon recall skill music extra extra parent quality cage identify boss mountain adapt"
+balance = 100_000_000_000_000
 
+[accounts.wallet_4]
+mnemonic = "laugh bleak chaos pumpkin energy forget fruit party busy swim toilet glide teach catalog regret hat adjust say valid enact shuffle soup artist fix"
+balance = 100_000_000_000_000
