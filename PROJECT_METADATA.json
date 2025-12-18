@@ -1,0 +1,219 @@
+{
+  "project": {
+    "name": "yield-vault-clarity4",
+    "description": "Time-Locked Yield Vault DeFi Protocol - A savings protocol with time-based yield accrual built with Clarity 4",
+    "version": "1.0.0",
+    "blockchain": "Stacks",
+    "clarity_version": "4",
+    "epoch": "3.3",
+    "category": "DeFi",
+    "features": [
+      "Time-locked vaults with 30/90/180/365 day options",
+      "Automated yield calculation based on lock period",
+      "Emergency withdrawal with penalty mechanism",
+      "Multiple yield pools support",
+      "Contract hash verification for approved tokens",
+      "Human-readable deposit receipts",
+      "Hiro Chainhooks integration for real-time monitoring"
+    ]
+  },
+  "deployment": {
+    "testnet": {
+      "network": "testnet",
+      "contract_address": "ST3DX5502GM712D9WC2X2MYC8HA5YYY8PM06GAPSZ.yield-vault",
+      "deployer_address": "ST3DX5502GM712D9WC2X2MYC8HA5YYY8PM06GAPSZ",
+      "deployment_tx": "0x825c3e270664b58c77aef8beb5d6b85d58ec71a285fabd987658efff16276043",
+      "block_height": 3701326,
+      "deployment_cost_stx": "2.481898",
+      "deployment_date": "2025-12-18T19:03:33.000Z",
+      "explorer_url": "https://explorer.hiro.so/txid/0x825c3e270664b58c77aef8beb5d6b85d58ec71a285fabd987658efff16276043?chain=testnet"
+    },
+    "mainnet": {
+      "status": "not_deployed",
+      "contract_address": null
+    }
+  },
+  "smart_contract": {
+    "file_path": "contracts/yield-vault.clar",
+    "functions": {
+      "public": [
+        {
+          "name": "create-pool",
+          "description": "Create a new yield pool (admin only)",
+          "params": ["name: string-ascii-32", "min-deposit: uint", "max-deposit: uint"],
+          "returns": "(response uint uint)",
+          "access": "admin_only"
+        },
+        {
+          "name": "deposit",
+          "description": "Deposit STX into a time-locked vault",
+          "params": ["amount: uint", "lock-period: uint", "pool-id: uint"],
+          "returns": "(response {vault-id: uint, lock-until: uint, yield-rate: uint, receipt: string-ascii} uint)",
+          "access": "public"
+        },
+        {
+          "name": "withdraw",
+          "description": "Withdraw principal + yield after lock period",
+          "params": ["vault-id: uint"],
+          "returns": "(response {principal: uint, yield-earned: uint, total-withdrawn: uint} uint)",
+          "access": "vault_owner"
+        },
+        {
+          "name": "emergency-withdraw",
+          "description": "Emergency withdraw with 10% penalty",
+          "params": ["vault-id: uint"],
+          "returns": "(response {principal-returned: uint, penalty-paid: uint} uint)",
+          "access": "vault_owner"
+        },
+        {
+          "name": "approve-contract",
+          "description": "Approve a token contract for deposits",
+          "params": ["contract-principal: principal", "name: string-ascii-32"],
+          "returns": "(response buff-32 uint)",
+          "access": "admin_only"
+        },
+        {
+          "name": "fund-treasury",
+          "description": "Add funds to protocol treasury",
+          "params": ["amount: uint"],
+          "returns": "(response uint uint)",
+          "access": "public"
+        },
+        {
+          "name": "deactivate-pool",
+          "description": "Deactivate a yield pool",
+          "params": ["pool-id: uint"],
+          "returns": "(response bool uint)",
+          "access": "admin_only"
+        }
+      ],
+      "read_only": [
+        {
+          "name": "get-vault",
+          "description": "Get vault details by ID",
+          "params": ["vault-id: uint"],
+          "returns": "(optional vault-data)"
+        },
+        {
+          "name": "get-pool",
+          "description": "Get pool details by ID",
+          "params": ["pool-id: uint"],
+          "returns": "(optional pool-data)"
+        },
+        {
+          "name": "get-user-stats",
+          "description": "Get user statistics",
+          "params": ["user: principal"],
+          "returns": "user-stats"
+        },
+        {
+          "name": "calculate-yield",
+          "description": "Calculate accrued yield for a vault",
+          "params": ["vault-id: uint"],
+          "returns": "(response yield-data uint)"
+        },
+        {
+          "name": "is-vault-unlocked",
+          "description": "Check if vault lock period has expired",
+          "params": ["vault-id: uint"],
+          "returns": "bool"
+        },
+        {
+          "name": "get-tvl",
+          "description": "Get total value locked in protocol",
+          "params": [],
+          "returns": "uint"
+        },
+        {
+          "name": "get-current-time",
+          "description": "Get current block time",
+          "params": [],
+          "returns": "uint"
+        },
+        {
+          "name": "is-contract-approved",
+          "description": "Check if a contract is approved",
+          "params": ["contract-principal: principal"],
+          "returns": "bool"
+        }
+      ]
+    },
+    "constants": {
+      "lock_periods": {
+        "LOCK_30_DAYS": 2592000,
+        "LOCK_90_DAYS": 7776000,
+        "LOCK_180_DAYS": 15552000,
+        "LOCK_365_DAYS": 31536000
+      },
+      "yield_rates_apy": {
+        "YIELD_30_DAYS": "3%",
+        "YIELD_90_DAYS": "5%",
+        "YIELD_180_DAYS": "8%",
+        "YIELD_365_DAYS": "12%"
+      },
+      "errors": {
+        "ERR_UNAUTHORIZED": 2001,
+        "ERR_INVALID_AMOUNT": 2002,
+        "ERR_VAULT_NOT_FOUND": 2003,
+        "ERR_LOCK_NOT_EXPIRED": 2004,
+        "ERR_INSUFFICIENT_BALANCE": 2005,
+        "ERR_INVALID_LOCK_PERIOD": 2006,
+        "ERR_ALREADY_CLAIMED": 2007,
+        "ERR_POOL_NOT_FOUND": 2008,
+        "ERR_POOL_INACTIVE": 2009,
+        "ERR_INVALID_CONTRACT": 2010
+      }
+    }
+  },
+  "integrations": {
+    "chainhooks": {
+      "enabled": true,
+      "config_file": "chainhooks/chainhook.yaml",
+      "monitored_events": [
+        "deposit",
+        "withdraw",
+        "emergency-withdraw",
+        "pool-created",
+        "pool-deactivated"
+      ],
+      "webhook_endpoint": "http://localhost:3000/chainhooks"
+    },
+    "monitoring": {
+      "metrics_tracked": [
+        "total_value_locked",
+        "number_of_vaults",
+        "total_yield_paid",
+        "active_pools_count",
+        "daily_deposits",
+        "daily_withdrawals"
+      ]
+    }
+  },
+  "scripts": {
+    "deployment": "scripts/deploy.js",
+    "interaction": "scripts/interact.js",
+    "monitoring": "scripts/monitor-chainhooks.js",
+    "testing": "scripts/test-contract.js"
+  },
+  "documentation": {
+    "readme": "README.md",
+    "api_docs": "docs/API.md",
+    "deployment_guide": "DEPLOYMENT.md",
+    "chainhooks_guide": "docs/CHAINHOOKS.md"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/[your-username]/yield-vault-clarity4"
+  },
+  "ai_assistant_notes": {
+    "purpose": "This metadata file is designed to be easily parsed by AI agents for understanding project structure and capabilities",
+    "quick_start": "Run 'node scripts/interact.js' to interact with the deployed contract",
+    "monitoring": "Run 'node scripts/monitor-chainhooks.js' to start monitoring contract events",
+    "key_features": [
+      "Fully deployed on Stacks testnet",
+      "Clarity 4 compatible with epoch 3.3",
+      "Integrated with Hiro Chainhooks for real-time event monitoring",
+      "Comprehensive test suite and interaction scripts"
+    ]
+  }
+}

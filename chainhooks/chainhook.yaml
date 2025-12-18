@@ -1,0 +1,102 @@
+# Hiro Chainhooks Configuration for Yield Vault Contract
+# This configuration monitors all important contract events for the leaderboard
+
+name: yield-vault-monitor
+version: 1
+chain: stacks
+networks:
+  testnet:
+    start_block: 3701326  # Contract deployment block
+
+predicate:
+  scope: contract_call
+  contract_identifier: "ST3DX5502GM712D9WC2X2MYC8HA5YYY8PM06GAPSZ.yield-vault"
+
+# Monitor all contract function calls
+hooks:
+  - name: deposit_monitor
+    if_this:
+      scope: contract_call
+      contract_identifier: "ST3DX5502GM712D9WC2X2MYC8HA5YYY8PM06GAPSZ.yield-vault"
+      method: deposit
+    then_that:
+      http_post:
+        url: "${CHAINHOOK_WEBHOOK_URL}/deposit"
+        authorization_header: "Bearer ${CHAINHOOK_API_KEY}"
+
+  - name: withdraw_monitor
+    if_this:
+      scope: contract_call
+      contract_identifier: "ST3DX5502GM712D9WC2X2MYC8HA5YYY8PM06GAPSZ.yield-vault"
+      method: withdraw
+    then_that:
+      http_post:
+        url: "${CHAINHOOK_WEBHOOK_URL}/withdraw"
+        authorization_header: "Bearer ${CHAINHOOK_API_KEY}"
+
+  - name: emergency_withdraw_monitor
+    if_this:
+      scope: contract_call
+      contract_identifier: "ST3DX5502GM712D9WC2X2MYC8HA5YYY8PM06GAPSZ.yield-vault"
+      method: emergency-withdraw
+    then_that:
+      http_post:
+        url: "${CHAINHOOK_WEBHOOK_URL}/emergency-withdraw"
+        authorization_header: "Bearer ${CHAINHOOK_API_KEY}"
+
+  - name: pool_created_monitor
+    if_this:
+      scope: contract_call
+      contract_identifier: "ST3DX5502GM712D9WC2X2MYC8HA5YYY8PM06GAPSZ.yield-vault"
+      method: create-pool
+    then_that:
+      http_post:
+        url: "${CHAINHOOK_WEBHOOK_URL}/pool-created"
+        authorization_header: "Bearer ${CHAINHOOK_API_KEY}"
+
+  - name: tvl_monitor
+    if_this:
+      scope: print_event
+      contract_identifier: "ST3DX5502GM712D9WC2X2MYC8HA5YYY8PM06GAPSZ.yield-vault"
+      contains: "event"
+    then_that:
+      http_post:
+        url: "${CHAINHOOK_WEBHOOK_URL}/events"
+        authorization_header: "Bearer ${CHAINHOOK_API_KEY}"
+
+# Fee tracking for leaderboard
+fee_tracking:
+  enabled: true
+  track_gas_fees: true
+  track_contract_fees: true
+
+# User activity tracking for leaderboard
+user_tracking:
+  enabled: true
+  track_unique_users: true
+  track_transaction_count: true
+
+# Metrics aggregation
+metrics:
+  - name: total_deposits
+    type: sum
+    field: amount
+    filter: method=deposit
+
+  - name: total_withdrawals
+    type: sum
+    field: amount
+    filter: method=withdraw
+
+  - name: unique_users
+    type: count_distinct
+    field: sender
+
+  - name: total_fees_generated
+    type: sum
+    field: fee
+
+  - name: daily_active_users
+    type: count_distinct
+    field: sender
+    window: 24h
