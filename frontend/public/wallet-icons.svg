@@ -1,0 +1,82 @@
+<!-- SVG Sprite Sheet for Wallet Icons -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+
+  <!-- Hiro Wallet Icon -->
+  <symbol id="hiro-wallet" viewBox="0 0 24 24">
+    <rect width="24" height="24" rx="4" fill="#8A77FF"/>
+    <path d="M12 4L6 8v8l6 4 6-4V8l-6-4z" fill="white" opacity="0.9"/>
+    <circle cx="12" cy="12" r="3" fill="#8A77FF"/>
+  </symbol>
+
+  <!-- Xverse Wallet Icon -->
+  <symbol id="xverse-wallet" viewBox="0 0 24 24">
+    <rect width="24" height="24" rx="4" fill="#4F46E5"/>
+    <path d="M6 6l12 12M18 6L6 18" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  </symbol>
+
+  <!-- Leather Wallet Icon -->
+  <symbol id="leather-wallet" viewBox="0 0 24 24">
+    <rect width="24" height="24" rx="4" fill="#FF6B6B"/>
+    <rect x="6" y="8" width="12" height="8" rx="2" fill="white" opacity="0.9"/>
+    <circle cx="15" cy="12" r="1.5" fill="#FF6B6B"/>
+  </symbol>
+
+  <!-- WalletKit SDK Icon -->
+  <symbol id="walletkit-sdk" viewBox="0 0 24 24">
+    <rect width="24" height="24" rx="4" fill="url(#walletkit-gradient)"/>
+    <path d="M12 2L3 7v10l9 5 9-5V7z" fill="white" opacity="0.2"/>
+    <path d="M12 6L7 9v6l5 3 5-3V9z" fill="white" opacity="0.9"/>
+    <defs>
+      <linearGradient id="walletkit-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#4F46E5;stop-opacity:1" />
+        <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" />
+      </linearGradient>
+    </defs>
+  </symbol>
+
+  <!-- Reown AppKit Icon -->
+  <symbol id="reown-appkit" viewBox="0 0 24 24">
+    <rect width="24" height="24" rx="4" fill="url(#reown-gradient)"/>
+    <circle cx="12" cy="12" r="8" fill="white" opacity="0.2"/>
+    <circle cx="12" cy="12" r="5" fill="white" opacity="0.4"/>
+    <circle cx="12" cy="12" r="2" fill="white" opacity="0.9"/>
+    <defs>
+      <linearGradient id="reown-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#7C3AED;stop-opacity:1" />
+        <stop offset="100%" style="stop-color:#4F46E5;stop-opacity:1" />
+      </linearGradient>
+    </defs>
+  </symbol>
+
+  <!-- Generic Wallet Icon -->
+  <symbol id="generic-wallet" viewBox="0 0 24 24">
+    <rect width="24" height="24" rx="4" fill="#888"/>
+    <rect x="5" y="7" width="14" height="10" rx="2" fill="white" opacity="0.3"/>
+    <rect x="7" y="9" width="10" height="6" rx="1" fill="white" opacity="0.6"/>
+    <circle cx="14" cy="12" r="1.5" fill="#888"/>
+  </symbol>
+
+  <!-- Email Login Icon -->
+  <symbol id="email-login" viewBox="0 0 24 24">
+    <rect width="24" height="24" rx="4" fill="#22C55E"/>
+    <path d="M4 6h16v12H4z" fill="white" opacity="0.3"/>
+    <path d="M4 6l8 5 8-5" stroke="white" stroke-width="1.5" fill="none" opacity="0.9"/>
+  </symbol>
+
+  <!-- Social Login Icon -->
+  <symbol id="social-login" viewBox="0 0 24 24">
+    <rect width="24" height="24" rx="4" fill="url(#social-gradient)"/>
+    <circle cx="8" cy="12" r="2" fill="white" opacity="0.9"/>
+    <circle cx="16" cy="12" r="2" fill="white" opacity="0.9"/>
+    <path d="M8 12h8" stroke="white" stroke-width="1.5" opacity="0.9"/>
+    <defs>
+      <linearGradient id="social-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" style="stop-color:#EA4335;stop-opacity:1" />
+        <stop offset="33%" style="stop-color:#FBBC04;stop-opacity:1" />
+        <stop offset="66%" style="stop-color:#34A853;stop-opacity:1" />
+        <stop offset="100%" style="stop-color:#4285F4;stop-opacity:1" />
+      </linearGradient>
+    </defs>
+  </symbol>
+
+</svg>

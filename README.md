@@ -18,10 +18,17 @@
 
 This project is optimized for the **Stacks Builder Challenge** leaderboard with:
 
+### Week 2 Challenge ✅
 ✅ **Hiro Chainhooks Integration** - Real-time event monitoring
 ✅ **User Activity Tracking** - Comprehensive metrics collection
 ✅ **Fee Generation Monitoring** - Transaction fee analytics
 ✅ **GitHub Contributions** - Public repository with active development
+
+### Week 3 Challenge ✅
+✅ **WalletKit SDK Integration** - Advanced wallet connection via WalletConnect
+✅ **Reown AppKit Integration** - Next-gen wallet UX with social & email login
+✅ **Enhanced User Tracking** - Multi-wallet support with detailed metrics
+✅ **Fee Analytics Dashboard** - Real-time fee generation tracking
 
 ## 📋 Requirements
 
@@ -61,14 +68,71 @@ This project is optimized for the **Stacks Builder Challenge** leaderboard with:
 ## 📁 Project Structure
 
 ```
-02-yield-vault/
+yield-vault/
 ├── Clarinet.toml
 ├── contracts/
 │   └── yield-vault.clar
 ├── tests/
 │   └── yield-vault_test.ts
+├── frontend/                       # Week 3: Full React Frontend
+│   ├── package.json
+│   ├── public/
+│   │   └── index.html
+│   └── src/
+│       ├── App.js                 # Main app with Stacks Connect
+│       ├── AppWithWalletKit.js    # Enhanced app with WalletKit/Reown
+│       ├── components/
+│       │   ├── Header.js
+│       │   ├── CreateVault.js
+│       │   ├── MyVaults.js
+│       │   ├── Stats.js
+│       │   ├── VaultDashboard.js
+│       │   └── WalletSelector.js  # Week 3: Multi-wallet selector
+│       ├── config/
+│       │   └── walletConfig.js    # WalletConnect Project ID
+│       ├── providers/
+│       │   └── WalletProvider.js  # Context for wallet state
+│       └── services/
+│           ├── walletKitService.js    # WalletKit SDK integration
+│           └── reownAppKitService.js  # Reown AppKit integration
+├── chainhooks/                     # Week 2: Chainhooks config
+│   └── chainhook.yaml
+├── scripts/
+│   ├── interact.js                # Contract interaction CLI
+│   └── monitor-chainhooks.js      # Event monitoring
+├── PROJECT_METADATA.json          # AI-readable metadata
 └── README.md
 ```
+
+## 🌐 Frontend Application (Week 3 Challenge)
+
+### Features
+- **Multiple Wallet Connection Methods**:
+  - Standard Stacks wallets (Hiro, Xverse, Leather)
+  - WalletKit SDK integration (WalletConnect protocol)
+  - Reown AppKit integration (Social & email login)
+- **Real-time Vault Management**: Create, view, and manage yield vaults
+- **Responsive Design**: Mobile-friendly UI with dark theme
+- **Metrics Dashboard**: Track users, fees, and transactions
+
+### Quick Start Frontend
+```bash
+# Navigate to frontend
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm start
+
+# Build for production
+npm run build
+```
+
+### WalletConnect Configuration
+- **Project ID**: `973aec75d9c96397c8ccd94d62bada81`
+- **Metadata**: Configured in `frontend/src/config/walletConfig.js`
 
 ## 🚀 Quick Start for AI Agents
 
@@ -82,7 +146,10 @@ node scripts/interact.js get-tvl
 # 3. Monitor events with Chainhooks
 node scripts/monitor-chainhooks.js --demo
 
-# 4. View metrics
+# 4. Start frontend application
+cd frontend && npm start
+
+# 5. View metrics
 cat metrics.json
 ```
 
@@ -243,14 +310,29 @@ const contractAddress = metadata.deployment.testnet.contract_address;
 
 ## 🏆 Builder Challenge Compliance
 
+### Week 2 Challenge
 | Requirement | Implementation | Status |
 |-------------|---------------|--------|
 | **Hiro Chainhooks** | Full integration with monitoring script | ✅ |
 | **User Tracking** | Comprehensive user metrics collection | ✅ |
 | **Fee Generation** | All transactions generate and track fees | ✅ |
 | **GitHub Contributions** | Public repository with documentation | ✅ |
+
+### Week 3 Challenge
+| Requirement | Implementation | Status |
+|-------------|---------------|--------|
+| **WalletKit SDK** | Full integration in `frontend/src/services/walletKitService.js` | ✅ |
+| **Reown AppKit** | Complete implementation with social/email login support | ✅ |
+| **User & Fee Tracking** | Enhanced metrics with multi-wallet support | ✅ |
+| **GitHub Contributions** | Comprehensive frontend with documentation | ✅ |
+
+### Overall Project
+| Feature | Status |
+|---------|--------|
 | **Clarity 4** | Fully compatible with epoch 3.3 | ✅ |
 | **Contract Deployed** | Live on testnet with verified transaction | ✅ |
+| **Frontend Application** | Full React app with wallet integration | ✅ |
+| **AI Agent Support** | PROJECT_METADATA.json and interaction scripts | ✅ |
 
 ### Leaderboard Metrics Tracked:
 - Total unique users interacting with contract
