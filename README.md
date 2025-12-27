@@ -10,9 +10,11 @@
 
 ## 🚨 IMPORTANT: Contract Successfully Deployed on Testnet!
 
-**Contract Address**: `ST3DX5502GM712D9WC2X2MYC8HA5YYY8PM06GAPSZ.yield-vault`
-**Transaction**: [`0x825c3e270664b58c77aef8beb5d6b85d58ec71a285fabd987658efff16276043`](https://explorer.hiro.so/txid/0x825c3e270664b58c77aef8beb5d6b85d58ec71a285fabd987658efff16276043?chain=testnet)
-**Block**: 3701326 | **Date**: 2025-12-18
+**Contract Address**: `SP1WPQWDNG2H8VMG93PW3JM74SGXVTA38EVCH7GYS.yield-vault`
+**Transaction**: [`e2dc0bef28af16ab3f9563266b1107be7befae503efffaa4d55bf9fabdceaa70`](https://explorer.hiro.so/txid/e2dc0bef28af16ab3f9563266b1107be7befae503efffaa4d55bf9fabdceaa70?chain=testnet)
+**Deployer**: `SP1WPQWDNG2H8VMG93PW3JM74SGXVTA38EVCH7GYS`
+**Date**: December 27, 2025
+**Contract Explorer**: [View Contract](https://explorer.hiro.so/txid/SP1WPQWDNG2H8VMG93PW3JM74SGXVTA38EVCH7GYS.yield-vault?chain=testnet)
 
 ## 📊 Leaderboard Tracking Features
 

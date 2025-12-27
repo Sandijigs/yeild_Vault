@@ -18,8 +18,8 @@ import MyVaults from './components/MyVaults';
 import Stats from './components/Stats';
 import WalletSelector from './components/WalletSelector';
 
-// Contract configuration
-const CONTRACT_ADDRESS = 'ST3DX5502GM712D9WC2X2MYC8HA5YYY8PM06GAPSZ';
+// Contract configuration (Updated December 27, 2025)
+const CONTRACT_ADDRESS = 'SP1WPQWDNG2H8VMG93PW3JM74SGXVTA38EVCH7GYS';
 const CONTRACT_NAME = 'yield-vault';
 
 // Lock periods in seconds

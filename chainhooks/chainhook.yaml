@@ -10,14 +10,14 @@ networks:
 
 predicate:
   scope: contract_call
-  contract_identifier: "ST3DX5502GM712D9WC2X2MYC8HA5YYY8PM06GAPSZ.yield-vault"
+  contract_identifier: "SP1WPQWDNG2H8VMG93PW3JM74SGXVTA38EVCH7GYS.yield-vault"
 
 # Monitor all contract function calls
 hooks:
   - name: deposit_monitor
     if_this:
       scope: contract_call
-      contract_identifier: "ST3DX5502GM712D9WC2X2MYC8HA5YYY8PM06GAPSZ.yield-vault"
+      contract_identifier: "SP1WPQWDNG2H8VMG93PW3JM74SGXVTA38EVCH7GYS.yield-vault"
       method: deposit
     then_that:
       http_post:
@@ -27,7 +27,7 @@ hooks:
   - name: withdraw_monitor
     if_this:
       scope: contract_call
-      contract_identifier: "ST3DX5502GM712D9WC2X2MYC8HA5YYY8PM06GAPSZ.yield-vault"
+      contract_identifier: "SP1WPQWDNG2H8VMG93PW3JM74SGXVTA38EVCH7GYS.yield-vault"
       method: withdraw
     then_that:
       http_post:
@@ -37,7 +37,7 @@ hooks:
   - name: emergency_withdraw_monitor
     if_this:
       scope: contract_call
-      contract_identifier: "ST3DX5502GM712D9WC2X2MYC8HA5YYY8PM06GAPSZ.yield-vault"
+      contract_identifier: "SP1WPQWDNG2H8VMG93PW3JM74SGXVTA38EVCH7GYS.yield-vault"
       method: emergency-withdraw
     then_that:
       http_post:
@@ -47,7 +47,7 @@ hooks:
   - name: pool_created_monitor
     if_this:
       scope: contract_call
-      contract_identifier: "ST3DX5502GM712D9WC2X2MYC8HA5YYY8PM06GAPSZ.yield-vault"
+      contract_identifier: "SP1WPQWDNG2H8VMG93PW3JM74SGXVTA38EVCH7GYS.yield-vault"
       method: create-pool
     then_that:
       http_post:

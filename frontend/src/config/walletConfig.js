@@ -6,6 +6,15 @@
 // WalletConnect Project ID (provided)
 export const WALLET_CONNECT_PROJECT_ID = '973aec75d9c96397c8ccd94d62bada81';
 
+// Contract Configuration (Updated December 27, 2025)
+export const CONTRACT_CONFIG = {
+  address: 'SP1WPQWDNG2H8VMG93PW3JM74SGXVTA38EVCH7GYS',
+  name: 'yield-vault',
+  network: 'testnet',
+  deploymentTx: 'e2dc0bef28af16ab3f9563266b1107be7befae503efffaa4d55bf9fabdceaa70',
+  fullId: 'SP1WPQWDNG2H8VMG93PW3JM74SGXVTA38EVCH7GYS.yield-vault'
+};
+
 // App metadata
 export const APP_METADATA = {
   name: 'Yield Vault DeFi',

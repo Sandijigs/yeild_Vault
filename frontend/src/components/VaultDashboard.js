@@ -104,7 +104,7 @@ const VaultDashboard = ({ stats, tvl, recentActivity }) => {
           }}>
             <div style={{ marginBottom: '0.5rem' }}>
               <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Address: </span>
-              <span>ST3DX5502GM712D9WC2X2MYC8HA5YYY8PM06GAPSZ.yield-vault</span>
+              <span>SP1WPQWDNG2H8VMG93PW3JM74SGXVTA38EVCH7GYS.yield-vault</span>
             </div>
             <div style={{ marginBottom: '0.5rem' }}>
               <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Network: </span>
