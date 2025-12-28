@@ -1,0 +1,9 @@
+{
+  "txId": "e2dc0bef28af16ab3f9563266b1107be7befae503efffaa4d55bf9fabdceaa70",
+  "contractName": "yield-vault",
+  "deployer": "SP1WPQWDNG2H8VMG93PW3JM74SGXVTA38EVCH7GYS",
+  "network": "testnet",
+  "timestamp": "2025-12-27T10:31:07.325Z",
+  "explorerUrl": "https://explorer.hiro.so/txid/e2dc0bef28af16ab3f9563266b1107be7befae503efffaa4d55bf9fabdceaa70?chain=testnet",
+  "contractUrl": "https://explorer.hiro.so/txid/SP1WPQWDNG2H8VMG93PW3JM74SGXVTA38EVCH7GYS.yield-vault?chain=testnet"
+}
